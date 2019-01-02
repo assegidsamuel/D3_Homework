@@ -2,7 +2,7 @@
 //Define the SVG area dimensions.
 var svgWidth = 900;
 var svgHeight = 600;
-var margin = {top: 20, right: 30, bottom: 60,left: 60};
+var margin = {top: 20, right: 30, bottom: 80,left: 80};
 
 //Define the dimensions of the chart area.
 var chartWidth = svgWidth - margin.left - margin.right;
@@ -11,25 +11,16 @@ var chartHeight = svgHeight - margin.top - margin.bottom;
 
 //Create a SVG wraper and 
 
-var svg = d3.select(".chart")
+var svg = d3.select("#scatter")
   .append("svg")
-  .attr("chartWidth", svgWidth)
-  .attr("chartHeight", svgHeight)
+  .attr("width", svgWidth)
+  .attr("height", svgHeight)
   .append("g")
   .attr("transform", `translate(${margin.left},${ margin.top})`);
 
-// append svg group
-  var chart = svg.append("g");
-
-//Append a div to the body 
-d3.select(".chart")
-  .append("div")
-  .attr("class", "tooltip")
-  .style("opacity", 0);
-
 // Retrieve data from CSV file and execute everything below
-// healthData = data;
-d3.csv("../../data/data.csv", function(error, healthData) {
+
+d3.csv("data/data.csv", function(error, healthData) {
    
     if(error) throw error;
 
@@ -39,8 +30,9 @@ d3.csv("../../data/data.csv", function(error, healthData) {
     });
 
 // Create scale functions
-var yLinearScale = d3.scaleLinear().range([chartHeight, 0]);
-var xLinearScale = d3.scaleLinear().range([0, chartWidth]);
+
+var xLinearScale = d3.scaleLinear().range([0, chartWidth]).domain([0,24]);
+var yLinearScale = d3.scaleLinear().range([chartHeight, 0]).domain([0, 28]);
 
 //Create the axis functions.
 var bottomAxis = d3.axisBottom(xLinearScale);
@@ -53,25 +45,25 @@ var yMin;
 var yMax;
     
     xMin = d3.min(healthData, function(data) {
-        return +data.poverty * 0.85;
+        return +data.poverty * .90;
     });
 
     xMax = d3.max(healthData, function(data) {
-        return +data.poverty * 1.15;
+        return +data.poverty * 1.10;
     });
     yMin = d3.min(healthData, function(data) {
-        return +data.healthcare * 0.94;
+        return +data.healthcare * .90;
     });
 
     yMax = d3.max(healthData, function(data) {
-        return +data.healthcare * 1.06;
+        return +data.healthcare * 1.10;
     });	
 
     xLinearScale.domain([xMin, xMax]);
     yLinearScale.domain([yMin, yMax]);
 
-    // Initialize tooltip 
-    var toolTip = d3
+// Initialize tooltip 
+var toolTip = d3
     .tip()
     .attr("class", "tooltip")
     .offset([80, -60])
@@ -84,33 +76,26 @@ var yMax;
         );
     });
 
-  // Create tooltip
-  chart.call(toolTip);
+// Create tooltip
+  svg.call(toolTip);
 
-  chart.selectAll("circle")
+  svg.selectAll("circle")
       .data(healthData)
       .enter()
       .append("circle")
-      .attr("cx", function(data, index) {
+      .attr("cx", function(data) {
           return xLinearScale(data.poverty)
       })
-      .attr("cy", function(data, index) {
+      .attr("cy", function(data) {
           return yLinearScale(data.healthcare)
       })
       .attr("r", "10")
-      .attr("fill", "blue")
-    // display tooltip on click
-      .on("mouseenter", function(data) {
-          toolTip.show(data);
-      })
+      .attr("fill", "lightblue")
       
-    // hide tooltip on mouseout
-      .on("mouseout", function(data, index) {
-          toolTip.hide(data);
-      });
+
   
-  // Appending a label to each data point
-  chart.append("text")
+// Appending a label to each data point
+  svg.append("text")
       .style("text-anchor", "middle")
       .style("font-size", "12px")
       .selectAll("tspan")
@@ -127,34 +112,28 @@ var yMax;
               return data.abbr
           });
   
-  // Append an SVG group for the xaxis, then display x-axis 
-  chart
-      .append("g")
-      .attr('transform', `translate(0, ${height})`)
-      .call(bottomAxis);
+// Append an SVG group for the xaxis, then display x-axis 
+  svg.append("g").attr("transform", `translate(0, ${chartHeight})`).call(bottomAxis);
 
-  // Append a group for y-axis, then display it
-  chart.append("g").call(leftAxis);
+// Append a group for y-axis, then display it
+  svg.append("g").call(leftAxis);
 
-  // Append y-axis label
-  chart
-      .append("text")
+
+
+// Append y-axis label
+  svg.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 0-margin.left + 20)
-      .attr("x", 0 - height/2)
+      .attr("x", 0 - svgHeight/2)
       .attr("dy","1em")
       .attr("class", "axis-text")
-      .text("healthcare (%)")
+      .text("Lacks Healthcare (%)")
 
-  // Append x-axis labels
-  chart
-      .append("text")
+// Append x-axis labels
+  svg.append("text")
       .attr(
           "transform",
-          "translate(" + width / 2 + " ," + (height + margin.top + 30) + ")"
-      )
+          "translate("  + (chartWidth/2) + ", " + (chartHeight + margin.top + 20) + ")")
       .attr("class", "axis-text")
-      .text("poverty (%)");
+      .text("In Poverty (%)");
   });
-
- 
